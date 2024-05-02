@@ -361,7 +361,7 @@ utilizado do outro lado. Desse modo qualquer IP é válido.
 Utilizando isso o comando fica:
 
 ```
-Router(config)#ip route 0.0.0.0 0.0.0.0 s1/0(200.0.0.1)
+Router(config)#ip route 0.0.0.0 0.0.0.0 <interface | ip-roteador>
 ```
 
 Perceba que esse valor só é válido para a rede, o roteador que fara
@@ -1691,14 +1691,7 @@ que ele já utiliza(geralmente o 0x2102)
 
 ## VLAN
 
-```
-Router(config)#interface <interface>
-Router(config-if)#ip address <ip> <máscara>
-Router(config-if)#no shutdown
-```
-
-O primeiro passo é deixar a interface de pé, isso é necessário pois
-iremos utilizar uma interface como base para as VLANs.
+Realizamos a criação de uma interface virtual. No cisco isso é feito por meio do comando `interface <interface>.x`, onde `x` é a subdivisão da interface.
 
 ```
 Router(config)#interface <interface.x>
@@ -1706,10 +1699,7 @@ Router(config-subif)#encapsulation dot1Q <id>
 Router(config-subif)#ip address <ip> <máscara>
 ```
 
-O comando dot1Q é o que irá permitir que a interface do roteador atua
-como uma porta trunk para o switch. Também é conhecido como "Router on
-a stick" pois o switch utiliza o roteador para fazer as rotas entre
-VLANs
+O comando dot1Q especifíca o protocolode encapsulamento dos pacotes que será usado nesta interface. Após usar este comando, bastar subir a interface padrão(sem ser a virtual) com `no shutdow`, a interface pode estar de pé antes de realizar está configuração.
 
 Exemplo da configuração de VLANs em um roteador
 
@@ -1724,13 +1714,13 @@ Router(config-subif)#encapsulation dot1Q 2
 Router(config-subif)#ip address 192.168.10.9 255.255.255.248
 ```
 
-Por ser uma interface virtual ela não necessita do comando no shutdown
+Perceba que as interfaces virtuais não necessita do comando no shutdown.
 
 **Troubleshooting**
 
 ```
 Router#show ip interfaces
-Router#show vlan
+Router#show vlans1/0(200.0.0.1)
 ```
 
 ## GRE
@@ -1819,6 +1809,15 @@ Switch(config-if)#duplex auto
 
 Define automáticamente o tipo de duplex que será utilizado
 
+**OBS**
+
+Caso esteja utilizando um switch de camada 3, é possível desligar o modo switch de uma de suas partes. Isso permite que o que o mesmo seja usado como um roteador.
+
+```
+Switch(config)#interface <interface>
+Switch(config-if)#no switchport
+```
+
 ## VLAN
 
 ```
@@ -1843,6 +1842,7 @@ implementado em dispositivos finais, que também estarão na mesma VLAN
 Switch(config)#interface <interface>
 Switch(config-if)#switchport mode trunk
 Switch(config-if)#switchport trunk encapsulation dot1q
+Switch(config-if)#switchport trunk allowed vlan <number[, number...]>
 ```
 
 Nessa configuração estabelecemos a porta sendo utilizada como modo
@@ -1850,9 +1850,10 @@ trunk, nesse modo de configuração a porta pode carregar o tráfico de
 várias VLANs(por padrão todas as configuradas no switch), e geralmente
 é utilizado para fazer a conexão entre Switches e de Switch para
 roteador.
-O último comando estabelece o tipo de encapsulação que será usada,
+O próximo comando estabelece o tipo de encapsulação que será usada,
 nesse caso utilizamos a mesma que usamos no roteador Dot1Q, é isso
-que irá permitir que o roteador faça o roteamento de VLANs
+que irá permitir que o roteador faça o roteamento de VLANs.
+Por último especificamos quais são as VLANs que poderam ser passadas por está trunk
 
 Exemplo de configuração:
 
