@@ -399,6 +399,22 @@ o ideal é fazer esse processo manualmente
 O último comando ip default-network diz aos outros roteadores qual é a
 rede de acesso a Internet.
 
+#### IPv6 
+
+```
+Router(config)#int <interface>
+Router(config-if)#ipv6 address <address>
+Router(config-if)#ipv6 rip <name> enable
+```
+
+A configuração do RIP para IPv6 segue a estrutura acima. Perceba que sua configuração é feita diretamente na placa de rede, e não mais como um processo separado. Após configurarmos o endereço da placa o comando `ipv6 rip <name> enable` habilita o roteamento naquela placa em especifíco.
+
+``` 
+Router(config-if)#ipv6 rip <name> default-information originate
+```
+
+O comando acima é usado para especificar que o roteador sendo configurado possui a rota padrão desta rede. IMPORTANTE: Essa configuração precisa ser feita em todas as outras placas de redes que estejam ligada com um vizinho.
+
 #### Resumo de Uso
 
 Imagine o seguinte Roteador A com as redes 172.16.20.0, 172.16.30.0 e
