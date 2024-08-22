@@ -608,6 +608,26 @@ deve ser feito deve ser feito entre os dois ou mais roteadores que
 precisam se comunicar, por padrão na <interface> é usado o ip do
 loopback.
 
+#### IPv6 (OSPFv3)
+
+```
+Router(config)#ipv6 router ospf <id>
+Router(config-rtr)#router-id <rid>
+```
+
+Antes de usar esses comandos é necessário habilitar o roteamento de IPv6 com `ipv6 unicast-routing`.
+Nesta versão do OSPF o route-id *precisa* ser configurado, pois o protocolo não consegue usar um IP para associar com o seu id.
+Comandos como `default-information originate` e `passive-interface <interface>` precisam ser feitos durante essa execução.
+
+```
+Router(config)#int <interface>
+Router(config-if)#ipv6 address <ipv6>
+Router(config-if)#ipv6 ospf <id> area <area-id>
+Router(config-if)#no shutdown
+```
+
+Nesta versão habilitamos o IPv6 por interface.
+
 **Troubleshooting**
 
 ```
