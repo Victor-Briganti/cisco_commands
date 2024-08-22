@@ -672,6 +672,106 @@ Router(config)#debug ip ospf
 
 Testa a conectividade ospf
 
+### BGP
+
+O BGP (Border Gateway Protocol), é o protocolo utilizado para interligar diferentes Sistemas Autônomos (AS) na internet. Dentro desse protocolo temos uma divisão entre eBGP (exterior Gateway Protocol) e o iBGP (interior Gateway Protocol).
+
+O eBGP é utilizado para interligar roteadores de ASs distintos. Existe um atributo utilizado por está parte do protocolo chamado de AS_PATH, ele é uma lista que contém todos os ASs pelos quais uma rota passou da origem até o destino. É por meio dele que essa parte externa do protocolo evita loops.
+
+O iBGP é utilizado para realizar a ligação de roteadores em um mesmo AS. A maneira que o iBGP tem de evitar loops é utilizando da ideia de horizonte dividido (split-horizon), assim o RIP, ou seja o roteador não repassa rotas para um outro roteador que ele tenha apreendido a rota.
+Na prática isso gera um problema, pois algumas rotas acabam não sendo anunciadas, para resolver isso temos a seguinte opção:
+
+- **Topologia Full Mesh**: Neste método todos os rotedaores devem ser interconectados. Então em uma rede com 10 roteadores teriamos 45 conexões. O valor é obtido com a seguinte fórmula n x ((n - 1) / 2).
+
+- **Route Reflector**: Neste método um dos roteadores é responsável por refletir as rotas apreendidas para outros roteadores. Este roteador tem o nome de route reflector, pois o mesmo reflete a rota para todos os outros. O grande problema desse método e que se este roteador cair a rede inteira pode ficar indisponível.
+
+- **BGP Confederation**: Nesta técnica os ASs são subdivididos para depois serem reagrupados em uma única confederação.
+
+#### eBGP
+
+```
+Router(config)#router bgp <AS>
+```
+
+Habilita o BPG no roteador e associa o mesmo a AS(número) especificada.
+
+```
+Router(config-router)#neighbor <ip> remote-as <AS>
+```
+
+Especifíca o vizinho do roteador atual dentro do BGP. O ip especificado deve ser o mesmo do vizinho, e o AS é o número especificado no bgp do roteador vizinho.
+
+```
+Router(config-router)#network <ip> mask <ip-mask>
+```
+
+Especifíca os endereços associados a este roteador. Caso o roteador abranja mais de uma rede uma sumarização pode ser feita.
+
+#### iBGP
+
+**OBS:** Em casos onde temos muitos roteadores e nem todos eles estão interligados, se faz necessário o uso de pelo menos mais um protocolo de roteamento, geralmente OSPF, para que os roteadores dentro do iBGP consigam conhecer uns aos outros.
+
+```
+Router(config)#int lo0
+Router(config-if)#ip address <ip> <mask>
+```
+
+Aqui estamos configurando a interface de loopback. Essa configuração não é exatamente obrigatória, a necessidade dela vai variar conforme a topologia que você utilizou para montar a rede.
+Essa configuração é usada pois no caso de uma interface cair, os outros roteadores na rede ainda vão saber chegar neste roteador.
+
+```
+Router(config)#router bgp <as>
+Router(config-router)#neighbor <ip> remote-as <as> 
+Router(config-router)#neighbor <ip> next-hop-self
+```
+
+Além de estarmos especificando o AS vizinho, o comando `next-hop-self` é usado para obrigar o roteador iBGP a repassar ele mesmo como sendo o roteador de próximo salto. Se este comando não for utilizado, o roteador iBGP repassa, como sendo o próximo salto o roteador pelo qual eele aprendeu a rota.
+
+```
+Router(config-router)#neighbor <ip> update-source <int-loop>
+```
+
+Caso você tenha configurado a interface de loopback, para fazer parte da rede, como no comando acima, você vai utilizar este comando como uma forma de dizer que a interface de loopback também pode ser utilizada para criar conexões BGP.
+
+```
+Router(config-router)#aggregate-address 192.168.0.0 255.255.0.0 summary-only
+```
+
+O comando acima é opcional e serve basicamente para realizar um resumo das redes que este roteador anuncia. No exemplo mencionado, estamos resumindo a rede 192.168.0.0. Toda e qualquer solicitação de um IP que esteja dentro deste intervalo será encaminhada para o roteador em questão. Este comando é útil para diminuir o tamanho das tabelas de roteamento.
+
+**Router Reflector**
+
+``` 
+Router(config)#router bgp <as> 
+Router(config-router)#neighbor <ip> remote-as <as> 
+Router(config-router)#neighbor <ip> update-source <loop-int> 
+Router(config-router)#neighbor <ip> route-reflector-client 
+Router(config-router)#neighbor <ip> next-hop-self
+```
+
+A configuração acima exemplifica como o Route Reflector deve ser considerado. Em geral, sua configuração é similar à dos outros roteadores; o único comando diferente é o `neighbor <ip> route-reflector-client`, que especifica o roteador cliente que receberá as rotas do Route Reflector.
+Importante: Este roteador precisa anunciar todas as redes que estejam dentro do seu AS utilizando o comando `network`.
+
+**Troubleshooting**
+
+```
+Router#show ip bgp
+```
+
+Mostra a lista de redes aprendidas pelo bgp e qual o seu ip para o seu salto.
+
+```
+Router#show ip bgp <ip>
+```
+
+Mostra informações sobre as rotas até uma determinada rede ou host. A rota marcada como `best` é a melhor rota para o destino marcado.
+
+```
+Router#show ip bgp summary
+```
+
+Mostra a relação deste roteador com seus vizinhos. O estado de Active, significa que o roteador está esperando o estabelecimento da conexão. A conexão só estará ativa e funcional quando aparecer um número positivo no lugar de *Active*.
+
 ## NAT
 
 ### Estático
