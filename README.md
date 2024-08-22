@@ -768,7 +768,32 @@ Router(config-router)#neighbor <ip> next-hop-self
 A configuração acima exemplifica como o Route Reflector deve ser considerado. Em geral, sua configuração é similar à dos outros roteadores; o único comando diferente é o `neighbor <ip> route-reflector-client`, que especifica o roteador cliente que receberá as rotas do Route Reflector.
 Importante: Este roteador precisa anunciar todas as redes que estejam dentro do seu AS utilizando o comando `network`.
 
+#### IPv6
+
+```
+Router(config)#router bgp <as> 
+Router(config-router)#bgp router-id <id> 
+Router(config-router)#no bgp default ipv4-unicast 
+Router(config-router)#neighbor <ipv6> remote-as <as>
+```
+
+Acima temos o inicio da configuração de BGP com IPv6, neste primeiro momento o único comando que temos diferente da versão IPv4 é o `no bgp default ipv4-unicast`. Este comando serve para dizer ao roteador que o IPv6 será usado ao invés do IPv4.
+
+```
+Router(config-router)#address-family ipv6 
+Router(config-router-af)#neighbor <ipv6> activate 
+Router(config-router-af)#network <ipv6/mask>
+```
+
+Acima temos a configuração dos vizinhos (neighbor) e das redes (network) do BPG.
+O primeiro comando (`address-family ipv6`) serve para especificar que iremos configurar as redes IPv6.
+Começando pelo vizinho usamos o mesmo ip que haviamos especificado no comando `neighbor <ipv6> remote-as <as>`, aqui estamos ativando sua conexão.
+Já nas redes o comando é similar ao que tinhamos anteriormente, com a única diferença que a máscara agora é declarada na notação CIDR (ex. fd00::1/64).
+
+
 **Troubleshooting**
+
+OBS: No caso de estar utilizando o ipv6, substitua os comandos `ip` por `ipv6`
 
 ```
 Router#show ip bgp
